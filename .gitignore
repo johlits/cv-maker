@@ -1,0 +1,13 @@
+# Ignore generated PDF files
+*.pdf
+
+# Ignore LaTeX log files
+*.log
+
+# Ignore specific LaTeX and auxiliary files
+*.aux
+*.out
+*.toc
+
+# Ignore the uploads directory
+uploads/

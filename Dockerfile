@@ -1,22 +1,19 @@
-# Use an official PHP runtime as a parent image
-FROM php:7.4-cli
+FROM php:7.4-apache
 
-# Install necessary packages
+# Update package lists and install necessary packages
 RUN apt-get update && apt-get install -y \
     texlive \
     texlive-latex-extra \
     texlive-fonts-recommended \
+    texlive-fonts-extra \
+    cm-super \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy the application files to the Apache document root
+COPY . /var/www/html/
+
 # Set the working directory
-WORKDIR /app
+WORKDIR /var/www/html
 
-# Copy composer files and install dependencies if needed
-# COPY composer.json composer.lock ./
-# RUN composer install --no-scripts --no-autoloader
-
-# Copy the rest of the application code
-COPY . .
-
-# Run your PHP application
-CMD [ "php", "./cv-maker.php" ]
+# Expose port 80 for the web server
+EXPOSE 80
