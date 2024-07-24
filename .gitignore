@@ -11,3 +11,6 @@
 
 # Ignore the uploads directory
 uploads/
+
+# Ignore the personal directory
+personal/

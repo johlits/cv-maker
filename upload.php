@@ -32,20 +32,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 $logoPath = $logosDir . $logoName;
 
                                 if (move_uploaded_file($tmpName, $logoPath)) {
-                                    $logos[$key] = $logoPath;
+                                    $logos[explode('.', $logoName, 2)[0]] = $logoPath;
                                 }
                             }
                         }
                     }
 
                     // Function to convert JSON data to LaTeX format
-                    function jsonToLatex($data, $logos) {
-                        $latex = "\\documentclass{article}\n\\usepackage{graphicx}\n\\begin{document}\n";
+                    function jsonToLatex($data, $logos)
+                    {
+                        $latex = "\\documentclass{article}\n\\usepackage{graphicx}\n\\usepackage{float}\\begin{document}\n";
                         $latex .= "\\section*{" . $data['name'] . "}\n";
                         $latex .= "\\subsection*{Contact Information}\n";
                         $latex .= "Email: " . $data['contactInformation']['email'] . "\\\\\n";
                         $latex .= "Phone: " . $data['contactInformation']['phone'] . "\\\\\n";
-                        $latex .= "Address: " . $data['contactInformation']['address']['street'] . ", " . $data['contactInformation']['address']['city'] . ", " . $data['contactInformation']['address']['state'] . " " . $data['contactInformation']['address']['zip'] . ", " . $data['contactInformation']['address']['country'] . "\n";
+                        $latex .= "Address: " . $data['contactInformation']['address']['street'] . ", " . $data['contactInformation']['address']['city'] . ", " . (isset($data['contactInformation']['address']['state']) ? $data['contactInformation']['address']['state'] . ", " : "") . $data['contactInformation']['address']['zip'] . ", " . $data['contactInformation']['address']['country'] . "\n";
                         $latex .= "\\subsection*{Summary}\n" . $data['summary'] . "\n";
                         $latex .= "\\subsection*{Education}\n";
                         foreach ($data['education'] as $edu) {
@@ -54,38 +55,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $latex .= "\\subsection*{Work Experience}\n";
                         foreach ($data['workExperience'] as $index => $work) {
                             $latex .= "\\textbf{" . $work['jobTitle'] . " at " . $work['company'] . "}\\\\\n";
-                            $latex .= "From " . $work['startDate'] . " to " . (isset($work['endDate']) ? $work['endDate'] : "Present") . "\\\\\n";
-                            if (isset($logos[$index])) {
-                                $latex .= "\\begin{figure}[h]\n";
+                            $latex .= "From " . $work['startDate'] . " to " . (isset($work['endDate']) ? $work['endDate'] : "Present") . "\\\n";
+                            if (isset($logos[$work['company']])) {
+                                $latex .= "\\begin{figure}[H]\n";
                                 $latex .= "\\centering\n";
-                                $latex .= "\\includegraphics[width=0.2\\textwidth]{" . $logos[$index] . "}\n";
+                                $latex .= "\\includegraphics[width=0.2\\textwidth]{" . $logos[$work['company']] . "}\n";
                                 $latex .= "\\end{figure}\n";
                             }
+                            if (isset($work['responsibilities']) && is_array($work['responsibilities']) && count($work['responsibilities']) > 0) {
+                                $latex .= "\\begin{itemize}\n";
+                                foreach ($work['responsibilities'] as $resp) {
+                                    $latex .= "\\item " . $resp . "\n";
+                                }
+                                $latex .= "\\end{itemize}\n";
+                            }
+                        }
+
+                        if (isset($data['skills']) && is_array($data['skills']) && count($data['skills']) > 0) {
+                            $latex .= "\\subsection*{Skills}\n";
                             $latex .= "\\begin{itemize}\n";
-                            foreach ($work['responsibilities'] as $resp) {
-                                $latex .= "\\item " . $resp . "\n";
+                            foreach ($data['skills'] as $skill) {
+                                $latex .= "\\item " . $skill . "\n";
                             }
                             $latex .= "\\end{itemize}\n";
                         }
-                        $latex .= "\\subsection*{Skills}\n";
-                        $latex .= "\\begin{itemize}\n";
-                        foreach ($data['skills'] as $skill) {
-                            $latex .= "\\item " . $skill . "\n";
+                        if (isset($data['certifications']) && is_array($data['certifications']) && count($data['certifications']) > 0) {
+                            $latex .= "\\subsection*{Certifications}\n";
+                            foreach ($data['certifications'] as $cert) {
+                                $latex .= $cert['name'] . ", " . $cert['institution'] . ", " . $cert['year'] . "\\\\\n";
+                            }
                         }
-                        $latex .= "\\end{itemize}\n";
-                        $latex .= "\\subsection*{Certifications}\n";
-                        foreach ($data['certifications'] as $cert) {
-                            $latex .= $cert['name'] . ", " . $cert['institution'] . ", " . $cert['year'] . "\\\\\n";
+                        if (isset($data['projects']) && is_array($data['projects']) && count($data['projects']) > 0) {
+                            $latex .= "\\subsection*{Projects}\n";
+                            foreach ($data['projects'] as $proj) {
+                                $latex .= "\\textbf{" . $proj['name'] . "}\n";
+                                $latex .= $proj['description'] . "\\\\\n";
+                                $latex .= "Technologies: " . implode(", ", $proj['technologies']) . "\n";
+                            }
                         }
-                        $latex .= "\\subsection*{Projects}\n";
-                        foreach ($data['projects'] as $proj) {
-                            $latex .= "\\textbf{" . $proj['name'] . "}\n";
-                            $latex .= $proj['description'] . "\\\\\n";
-                            $latex .= "Technologies: " . implode(", ", $proj['technologies']) . "\n";
-                        }
-                        $latex .= "\\subsection*{Languages}\n";
-                        foreach ($data['languages'] as $lang) {
-                            $latex .= $lang['language'] . ": " . $lang['proficiency'] . "\\\\\n";
+                        if (isset($data['languages']) && is_array($data['languages']) && count($data['languages']) > 0) {
+                            $latex .= "\\subsection*{Languages}\n";
+                            foreach ($data['languages'] as $lang) {
+                                $latex .= $lang['language'] . ": " . $lang['proficiency'] . "\\\\\n";
+                            }
                         }
                         $latex .= "\\end{document}\n";
                         return $latex;
