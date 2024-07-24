@@ -53,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         }
                         $latex .= "\\subsection*{Work Experience}\n";
                         foreach ($data['workExperience'] as $index => $work) {
-                            $latex .= "\\textbf{" . $work['jobTitle'] . " at " . $work['company'] . "}\n";
+                            $latex .= "\\textbf{" . $work['jobTitle'] . " at " . $work['company'] . "}\\\\\n";
+                            $latex .= "From " . $work['startDate'] . " to " . (isset($work['endDate']) ? $work['endDate'] : "Present") . "\\\\\n";
                             if (isset($logos[$index])) {
                                 $latex .= "\\begin{figure}[h]\n";
                                 $latex .= "\\centering\n";
